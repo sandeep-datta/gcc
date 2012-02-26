@@ -1,0 +1,1 @@
+../binutils-2.22/ltmain.sh

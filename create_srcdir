@@ -1,0 +1,49 @@
+#!/bin/bash
+component_dirs='binutils-2.22 gcc-4.6.2 newlib-1.19.0 gdb-7.4'
+
+unified_src=srcw
+
+function abs() { pushd "$1" >/dev/null && pwd && popd > /dev/null ; }
+
+if [ ! -d ${unified_src} ];
+then
+	mkdir ${unified_src}
+fi
+
+cd ${unified_src}
+ignore_list=". .. CVS .svn .git"
+for srcdir in ${component_dirs}
+do
+	echo "Component: $srcdir"
+	case srcdir
+		in
+		/* | [A-Za-z]:[\\/]*)
+		;;
+		*)
+		srcdir="../${srcdir}"
+		;;
+	esac
+	files=`ls -a ${srcdir}`
+	for f in ${files}
+	do
+		found=
+		for i in ${ignore_list}
+		do
+			if [ "$f" = "$i" ]
+			then
+				found=yes
+			fi
+		done
+		if [ -z "${found}" ]
+		then
+			echo "$f ..linked"
+			ln -s ${srcdir}/$f .
+		fi
+	done
+	ignore_list="${ignore_list} ${files}"
+done
+
+#HACK:Manually choosing the right version of sub components...
+if [ -h libiberty ] ; then rm libiberty ; fi #-h -> check if symbolic link exists
+ln -s `abs ../gdb-7.4/libiberty` `abs ../srcw`
+cd ..
